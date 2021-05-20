@@ -1,59 +1,137 @@
-import React from 'react';
-import { StyleSheet, Dimensions, ScrollView, View } from 'react-native';
+import React,{ useState, useEffect } from 'react';
+import { StyleSheet, Dimensions, ScrollView, View, Alert } from 'react-native';
 import { Button, Block, Text, Input, theme } from 'galio-framework';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { connect } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { actions } from '../reducer/redux-saga/modules/user';
 
 const { width } = Dimensions.get('screen');
 
-export default class Login extends React.Component {
+const storeData = async (value) => {
+  console.log('//////////stoire', value)
+  try {
+    const jsonValue = JSON.stringify(value)
+    await AsyncStorage.setItem('@user', jsonValue)
+  } catch (e) {
+    // saving error
+  }
+}
 
-renderProducts = () => {
+const Login = (props) => {
 
-    const { navigation } = this.props;
+  const navigation = useNavigation();
 
+  const[state,setState] = useState({
+    email: null,
+    password: null
+  })
+
+  useEffect(() => {
+    props.clearMessage();
+  },[])
+
+  useEffect(() => {
+    if(props && props.loginMessage){
+      Alert.alert(
+        'Response',
+        props.loginMessage,
+        [
+          {text: 'Cancel', onPress: () => console.log('Cancel Pressed!')},
+          {text: 'OK', onPress: props.loginMessage === "User login Successfully" ? navigateDashboard : cleatReduc},
+        ],
+        { cancelable: false }
+      )
+    }
+  },[props && props.loginMessage]);
+
+  const cleatReduc = () => {
+    props.clearMessage();
+  }
+
+  const navigateDashboard = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Home'}],
+    });
+    // console.log('props.userDetails',props.userDetails)
+    storeData(props.userDetails)
+    // console.log('data//////',data)
+    navigation.navigate("Home")
+  }
+
+  const onSubmitPress = () => {
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if(reg.test(state.email)){
+      props.userLogin(state)
+    }else{
+      Alert.alert("Insert Proper Email")
+    }
+  }
+
+  const renderProducts = () => {
     return (
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.products}>
         <Block flex>
-            <Text size={16} style={styles.tabTitle}>Email</Text>
-            <Input
-                right
-                icon="email"
-                family="fontisto"
-                iconSize={14}
-                iconColor="black"
-                style={styles.search}
-                placeholder="Enter proper Email"
-                placeholderTextColor={theme.COLORS.INFO}
-            />
-            <Text size={16} style={styles.tabTitle}>Password</Text>
-            <Input
-                style={styles.search}
-                placeholder="password"
-                family="antdesign"
-                password
-                viewPass
-                placeholder="Enter Password"
-                placeholderTextColor={theme.COLORS.INFO}
-            />
+          <Text size={16} style={styles.tabTitle}>Email</Text>
+          <Input
+            right
+            icon="email"
+            family="fontisto"
+            iconSize={14}
+            iconColor="black"
+            style={styles.search}
+            placeholder="Enter proper Email"
+            color={theme.COLORS.THEME}
+            placeholderTextColor={theme.COLORS.THEME}
+            onChangeText={(data) => setState({...state, email: data})}
+          />
+          <Text size={16} style={styles.tabTitle}>Password</Text>
+          <Input
+            style={styles.search}
+            placeholder="password"
+            family="antdesign"
+            password
+            viewPass
+            placeholder="Enter Password"
+            color={theme.COLORS.THEME}
+            placeholderTextColor={theme.COLORS.THEME}
+            onChangeText={(data) => setState({...state, password: data})}
+          />
         </Block>
-        <Button round size="small" >LOGIN</Button>
+        <Button round size="small" onPress={onSubmitPress} >LOGIN</Button>
+        <Text size={16} onPress={() => navigation.navigate("Sign Up")} style={styles.linkStyle}>New User use this link</Text>
       </ScrollView>
     )
   }
 
-  render() {
-    return (
-      <Block flex center style={styles.home}>
-        {this.renderProducts()}
-      </Block>
-    );
-  }
+  return (
+    <Block flex center style={styles.home}>
+      {renderProducts()}
+    </Block>
+  );
 }
+
+const mapStateToProps = (state) => {
+  return {
+    loginMessage: state.user.userLoginMessage,
+    userDetails: state.user.user_details,
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  {
+    userLogin: actions.userLogin,
+    clearMessage: actions.clearMessage
+  },
+)(Login);
 
 const styles = StyleSheet.create({
   home: {
-    width: width,    
+    width: width,
   },
   search: {
     height: 48,
@@ -103,4 +181,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
+  linkStyle: {
+    marginTop: 20,
+    textDecorationLine: 'underline',
+    color: 'darkblue'
+  }
 });

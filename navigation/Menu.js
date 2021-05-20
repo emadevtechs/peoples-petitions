@@ -1,10 +1,12 @@
-import React from "react";
-import { TouchableWithoutFeedback, ScrollView, StyleSheet, Image } from "react-native";
+import React, {useState,useEffect}from "react";
+import { TouchableWithoutFeedback, ScrollView, StyleSheet, Image, Alert } from "react-native";
 import { Block, Text, theme } from "galio-framework";
 import { useSafeArea } from "react-native-safe-area-context";
 
 import { Icon, Drawer as DrawerCustomItem } from '../components/';
 import { Images, materialTheme } from "../constants/";
+import { connect } from 'react-redux';
+import { actions } from '../reducer/redux-saga/modules/post';
 
 
 function CustomDrawerContent({
@@ -15,19 +17,29 @@ function CustomDrawerContent({
   state,
   ...rest
 }) {
+
+  let props = rest;
+  const[isAdmin,setAdmin] = useState(false);
+
   const insets = useSafeArea();
   const screens = [
     "Home",
     "Sign In",
     "Sign Up",
-    // "Woman",
-    // "Man",
-    // "Kids",
-    // "New Collection",
     "Profile",
-    // "Settings",
-    // "Components"
   ];
+  const adminscreens = [
+    "Dashboard",
+    "Login",
+    // "PostDetail",
+  ];
+
+  useEffect(() => {
+    if(props.is_admin){
+     setAdmin(props.is_admin)
+    }
+  },[props.is_admin])
+
   return (
     <Block
       style={styles.container}
@@ -44,20 +56,6 @@ function CustomDrawerContent({
             </Text>
           </Block>
         </TouchableWithoutFeedback>
-        {/* <Block row>
-          <Block middle style={styles.pro}>
-            <Text size={16} color="white">
-              {profile.plan}
-            </Text>
-          </Block>
-          <Text size={16} muted style={styles.seller}>
-            {profile.type}
-          </Text>
-          <Text size={16} color={materialTheme.COLORS.WARNING}>
-            {profile.rating}{" "}
-            <Icon name="shape-star" family="GalioExtra" size={14} />
-          </Text>
-        </Block> */}
       </Block>
       <Block flex style={{ paddingLeft: 7, paddingRight: 14 }}>
         <ScrollView
@@ -70,7 +68,17 @@ function CustomDrawerContent({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {screens.map((item, index) => {
+          {!isAdmin && screens.map((item, index) => {
+            return (
+              <DrawerCustomItem
+                title={item}
+                key={index}
+                navigation={navigation}
+                focused={state.index === index ? true : false}
+              />
+            );
+          })}
+          {isAdmin && adminscreens.map((item, index) => {
             return (
               <DrawerCustomItem
                 title={item}
@@ -82,22 +90,25 @@ function CustomDrawerContent({
           })}
         </ScrollView>
       </Block>
-      {/* <Block flex={0.3} style={{ paddingLeft: 7, paddingRight: 14 }}>
-        <DrawerCustomItem
-          title="Sign In"
-          navigation={navigation}
-          focused={state.index === 8 ? true : false}
-        />
-        <DrawerCustomItem
-          title="Sign Up"
-          navigation={navigation}
-          focused={state.index === 9 ? true : false}
-        />
-      </Block> */}
     </Block>
   );
 }
 
+
+const mapStateToProps = (state) => {
+  console.log('is_Admin',state.general.is_admin)
+  return {
+    is_admin: state.general.is_admin,
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  {
+    getMyPosts: actions.getMyPosts,
+    clearMessage: actions.clearMessage,
+  },
+)(CustomDrawerContent);
 
 const styles = StyleSheet.create({
   container: {
@@ -136,4 +147,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default CustomDrawerContent;
+// export default CustomDrawerContent;

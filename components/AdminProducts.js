@@ -7,19 +7,19 @@ import materialTheme from '../constants/Theme';
 
 const { width } = Dimensions.get('screen');
 
-class Product extends React.Component {
+class AdminProduct extends React.Component {
   render() {
-    const { navigation, product, horizontal, full, style, priceColor, imageStyle } = this.props;
+    const { navigation, product, horizontal, full, style, priceColor, imageStyle, getdetails } = this.props;
     const imageStyles = [styles.image, full ? styles.fullImage : styles.horizontalImage, imageStyle];
 
     return (
       <Block row={horizontal} card flex style={[styles.product, styles.shadow, style]}>
-        <TouchableWithoutFeedback>
+        <TouchableWithoutFeedback  onPress={() => getdetails(product)}>
           <Block flex style={[styles.imageContainer, styles.shadow]}>
             <Image source={{ uri: product.picture_url }} style={imageStyles} />
           </Block>
         </TouchableWithoutFeedback>
-        <TouchableWithoutFeedback>
+        <TouchableWithoutFeedback  onPress={() => getdetails(product)}>
           <Block flex space="between" style={styles.productDescription}>
             <Text size={14} style={styles.productTitle}>{product.text}</Text>
             <Text size={12} muted={!priceColor} color={priceColor}>Status: {product.status}</Text>
@@ -30,7 +30,7 @@ class Product extends React.Component {
   }
 }
 
-export default withNavigation(Product);
+export default withNavigation(AdminProduct);
 
 const styles = StyleSheet.create({
   product: {

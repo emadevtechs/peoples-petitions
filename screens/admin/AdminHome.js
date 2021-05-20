@@ -1,15 +1,70 @@
-import React from 'react';
-import { StyleSheet, Dimensions, ScrollView } from 'react-native';
+import React,{ useState, useEffect } from 'react';
+import { StyleSheet, Dimensions, ScrollView,TouchableOpacity, View } from 'react-native';
 import { Button, Block, Text, Input, theme } from 'galio-framework';
+import { connect } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
+import { actions } from '../../reducer/redux-saga/modules/post';
 
-import { Icon, Product } from '../components/';
+import { Icon, AdminProduct } from '../../components/';
 
 const { width } = Dimensions.get('screen');
-import products from '../constants/products';
+import products from '../../constants/products';
 
-export default class Home extends React.Component {
-  renderSearch = () => {
-    const { navigation } = this.props;
+const getData = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('@admin')
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch(e) {
+    // error reading value
+  }
+}
+
+const removeData = async () => {
+  try {
+    await AsyncStorage.removeItem('@admin')
+    await AsyncStorage.removeItem('@user')
+  } catch(e) {
+    // error reading value
+  }
+}
+
+const AdminHome = (props) => {
+
+  const isFocused = useIsFocused();
+  const navigation = useNavigation();
+  const[myPosts,setMyPosts] = useState(null);
+  const[adminDetails,setAdminDetails] = useState(null);
+  const[AdminFound,setAdminFound] = useState(null);
+
+  
+  useEffect(() => {
+    if(isFocused){
+      props.clearMessage()
+      async function getAdmin(){
+        let data = await getData();
+        console.log('data data at', data)
+        if(data && data.id){
+          setAdminFound(true);
+          setAdminDetails(data);
+          props.getPostsByDistrict(data.name)
+        }else{
+          setAdminFound(false);
+        }
+      } 
+      getAdmin();
+    }
+  },[isFocused]);
+
+  useEffect(() => {
+    if(props && props.district_posts){
+      setMyPosts(props && props.district_posts)
+    }
+  },[props && props.district_posts])
+
+  const renderSearch = () => {
+    // const { navigation } = this.props;
     const iconCamera = <Icon size={16} color={theme.COLORS.MUTED} name="zoom-in" family="material" />
 
     return (
@@ -24,8 +79,8 @@ export default class Home extends React.Component {
     )
   }
   
-  renderTabs = () => {
-    const { navigation } = this.props;
+  const renderTabs = () => {
+    // const { navigation } = props;
 
     return (
       <Block row style={styles.tabs}>
@@ -45,32 +100,85 @@ export default class Home extends React.Component {
     )
   }
 
-  renderProducts = () => {
+  const onSignOutPress = () => {
+    removeData().then(res => {
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      });
+      navigation.navigate("Login")
+    })
+  }
+
+  const getItem = (data) => {
+    // console.log('....data///////',data)
+    props.passPost(data)
+    navigation.navigate('PostDetail')
+  }
+
+  const renderProducts = () => {
     return (
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.products}>
         <Block flex>
-          <Product product={products[0]} horizontal />
-          {/* <Block flex row>
-            <Product product={products[1]} style={{ marginRight: theme.SIZES.BASE }} />
-            <Product product={products[2]} />
-          </Block> */}
-          <Product product={products[3]} horizontal />
-          {/* <Product product={products[4]} full /> */}
+          {myPosts && myPosts.length === 0 &&
+            <View style={{alignItems: 'center', justiftContent: 'center', display: 'flex'}}>
+              <Text style={{color: 'black', fontWeight: 'bold', fontSize: 20}}>No Posts Found</Text>
+            </View>
+          }
+          {myPosts && myPosts.map((item,index) => {
+            return <AdminProduct key={index} product={item} getdetails={getItem} horizontal priceColor="#6632a8" />
+          })}
         </Block>
+        <View style={{position: 'absolute', Top: 15, right: 10}}>
+          <TouchableOpacity onPress={onSignOutPress} style={{borderRadius: 5,width: 60,height: 40, backgroundColor: 'darkblue', alignItems: 'center', justifyContent: 'center'}}>
+            <Text style={{color: 'white'}}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     )
   }
 
-  render() {
+  const showLoading = () => {
+    return(
+      <View style={{alignItems: 'center', justiftContent: 'center', display: 'flex',marginTop: 50}}>
+        <Text style={{color: 'black', fontWeight: 'bold', fontSize: 20}}>Loading</Text>
+      </View>        
+    )
+  }
+
+  const UserNotFound = () => {
+    return(
+      <View style={{alignItems: 'center', justiftContent: 'center', display: 'flex',marginTop: 50}}>
+        <Text style={{color: 'black', fontWeight: 'bold', fontSize: 20}}>You must Login First</Text>
+      </View> 
+    )
+  }
+
     return (
       <Block flex center style={styles.home}>
-        {this.renderProducts()}
+        {AdminFound === null ? showLoading() : AdminFound === false ? UserNotFound() :renderProducts()}
       </Block>
     );
-  }
 }
+
+const mapStateToProps = (state) => {
+  console.log('......',state.post.district_posts)
+  return {
+    userRegisterMessage: state.user.userRegisterMessage,
+    district_posts: state.post.district_posts,
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  {
+    getPostsByDistrict: actions.getPostsByDistrict,
+    clearMessage: actions.clearMessage,
+    passPost: actions.passPost
+  },
+)(AdminHome);
 
 const styles = StyleSheet.create({
   home: {

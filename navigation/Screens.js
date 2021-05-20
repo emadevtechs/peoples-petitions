@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Easing, Animated, Dimensions } from 'react-native';
 import { createStackNavigator } from "@react-navigation/stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
+import { Provider } from 'react-redux';
+import configureStore from '../reducer/redux-saga/configStore';
 
 import { Block, Text, theme } from "galio-framework";
 
@@ -14,6 +16,9 @@ import SettingsScreen from '../screens/Settings';
 import RegisterScreen from '../screens/Register';
 import LoginScreen from '../screens/Login';
 import AddPostScreen from '../screens/AddPost';
+import AdminHomeScreen from '../screens/admin/AdminHome';
+import AdminLoginScreen from '../screens/admin/AdminLogin';
+import UpdatePostScreen from '../screens/admin/UpdatePost';
 
 import CustomDrawerContent from './Menu';
 import { Icon, Header } from '../components';
@@ -26,7 +31,7 @@ const Drawer = createDrawerNavigator();
 
 const profile = {
   avatar: Images.Profile,
-  name: "Rachel Brown",
+  name: "Welcome",
   type: "Seller",
   plan: "Pro",
   rating: 4.8
@@ -75,6 +80,26 @@ function SettingsStack(props) {
   );
 }
 
+function UpdatePostStack(props) {
+  return (
+    <Stack.Navigator
+      initialRouteName="PostDetail"
+      mode="card"
+      headerMode="screen"
+    >
+      <Stack.Screen
+        name="PostDetail"
+        component={UpdatePostScreen}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header title="Update Petition" scene={scene} navigation={navigation} />
+          )
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
 function ComponentsStack(props) {
   return (
     <Stack.Navigator mode="card" headerMode="screen">
@@ -94,13 +119,13 @@ function ComponentsStack(props) {
 function HomeStack(props) {
   return (
     <Stack.Navigator mode="card" headerMode="screen">
-      <Stack.Screen 
+      <Stack.Screen
         name="Home"
         component={HomeScreen}
         options={{
           header: ({ navigation, scene }) => (
-            <Header 
-              search
+            <Header
+              // search
               // tabs
               title="Home"
               navigation={navigation}
@@ -109,16 +134,16 @@ function HomeStack(props) {
           )
         }}
       />
-      <Stack.Screen 
+      <Stack.Screen
         name="Add Post"
         component={AddPostScreen}
         options={{
           header: ({ navigation, scene }) => (
-            <Header 
+            <Header
               // search
               // tabs
               back
-              title="Add Post"
+              title="Add Petition"
               navigation={navigation}
               scene={scene}
             />
@@ -129,15 +154,15 @@ function HomeStack(props) {
   );
 }
 
-function RegisterStack(props){
+function RegisterStack(props) {
   return (
     <Stack.Navigator mode="card" headerMode="screen">
-      <Stack.Screen 
+      <Stack.Screen
         name="Sign Up"
         component={RegisterScreen}
         options={{
           header: ({ navigation, scene }) => (
-            <Header 
+            <Header
               // search
               // tabs
               title="Sign Up"
@@ -147,12 +172,12 @@ function RegisterStack(props){
           )
         }}
       />
-      <Stack.Screen 
+      <Stack.Screen
         name="Sign In"
         component={LoginScreen}
         options={{
           header: ({ navigation, scene }) => (
-            <Header 
+            <Header
               // search
               // tabs
               title="Sign In"
@@ -166,15 +191,15 @@ function RegisterStack(props){
   );
 }
 
-function LoginStack(props){
+function LoginStack(props) {
   return (
     <Stack.Navigator mode="card" headerMode="screen">
-      <Stack.Screen 
+      <Stack.Screen
         name="Sign In"
         component={LoginScreen}
         options={{
           header: ({ navigation, scene }) => (
-            <Header 
+            <Header
               // search
               // tabs
               title="Sign In"
@@ -262,63 +287,6 @@ function AppStack(props) {
           )
         }}
       />
-      {/* <Drawer.Screen
-        name="Woman"
-        component={ProScreen}
-        options={{
-          drawerIcon: ({ focused }) => (
-            <Icon
-              size={16}
-              name="md-woman"
-              family="ionicon"
-              color={focused ? "white" : materialTheme.COLORS.MUTED}
-              style={{ marginLeft: 4, marginRight: 4 }}
-            />
-          )
-        }}
-      />
-      <Drawer.Screen
-        name="Man"
-        component={ProScreen}
-        options={{
-          drawerIcon: ({ focused }) => (
-            <Icon
-              size={16}
-              name="man"
-              family="entypo"
-              color={focused ? "white" : materialTheme.COLORS.MUTED}
-            />
-          )
-        }}
-      />
-      <Drawer.Screen
-        name="Kids"
-        component={ProScreen}
-        options={{
-          drawerIcon: ({ focused }) => (
-            <Icon
-              size={16}
-              name="baby"
-              family="GalioExtra"
-              color={focused ? "white" : materialTheme.COLORS.MUTED}
-            />
-          )
-        }}
-      />
-      <Drawer.Screen
-        name="New Collection"
-        component={ProScreen}
-        options={{
-          drawerIcon: ({ focused }) => (
-            <Icon
-              size={16}
-              name="grid-on"
-              family="material"
-              color={focused ? "white" : materialTheme.COLORS.MUTED}
-            />
-          )
-        }}
-      /> */}
       <Drawer.Screen
         name="Profile"
         component={ProfileStack}
@@ -363,213 +331,144 @@ function AppStack(props) {
           )
         }}
       />
-      {/* <Drawer.Screen
-        name="Sign In"
-        component={ProScreen}
+    </Drawer.Navigator>
+  );
+}
+
+function AdminHomeStack(props) {
+  return (
+    <Stack.Navigator mode="card" headerMode="screen">
+      <Stack.Screen
+        name="Dashboard"
+        component={AdminHomeScreen}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header
+              // search
+              // tabs
+              title="Dashboard"
+              navigation={navigation}
+              scene={scene}
+            />
+          )
+        }}
+      />
+       <Stack.Screen
+        name="PostDetail"
+        component={UpdatePostScreen}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header title="Update Petition" scene={scene} navigation={navigation} />
+          )
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function AdminLoginStack(props) {
+  return (
+    <Stack.Navigator mode="card" headerMode="screen">
+      <Stack.Screen
+        name="Login"
+        component={AdminLoginScreen}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header
+              // search
+              // tabs
+              title="Login"
+              navigation={navigation}
+              scene={scene}
+            />
+          )
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function AdminStack(props) {
+  return (
+    <Drawer.Navigator
+      style={{ flex: 1 }}
+      drawerContent={props => (
+        <CustomDrawerContent {...props} profile={profile} />
+      )}
+      drawerStyle={{
+        backgroundColor: "white",
+        width: width * 0.8
+      }}
+      drawerContentOptions={{
+        activeTintColor: "white",
+        inactiveTintColor: "#000",
+        activeBackgroundColor: materialTheme.COLORS.ACTIVE,
+        inactiveBackgroundColor: "transparent",
+        itemStyle: {
+          width: width * 0.74,
+          paddingHorizontal: 12,
+          // paddingVertical: 4,
+          justifyContent: "center",
+          alignContent: "center",
+          // alignItems: 'center',
+          overflow: "hidden"
+        },
+        labelStyle: {
+          fontSize: 18,
+          fontWeight: "normal"
+        }
+      }}
+      initialRouteName="Dashboard"
+    >
+      <Drawer.Screen
+        name="Dashboard"
+        component={AdminHomeStack}
         options={{
           drawerIcon: ({ focused }) => (
             <Icon
               size={16}
-              name="ios-log-in"
-              family="ionicon"
+              name="shop"
+              family="GalioExtra"
               color={focused ? "white" : materialTheme.COLORS.MUTED}
             />
           )
         }}
       />
       <Drawer.Screen
-        name="Sign Up"
-        component={ProScreen}
+        name="Login"
+        component={AdminLoginStack}
         options={{
           drawerIcon: ({ focused }) => (
             <Icon
               size={16}
-              name="md-person-add"
-              family="ionicon"
+              name="shop"
+              family="GalioExtra"
               color={focused ? "white" : materialTheme.COLORS.MUTED}
             />
           )
         }}
-      /> */}
+      />
     </Drawer.Navigator>
   );
 }
-
 export default function OnboardingStack(props) {
+
+  const [loading, onLoading] = useState(true);
+  const { store } = configureStore(() => onLoading(false));
+
   return (
-    <Stack.Navigator mode="card" headerMode="none">
-      <Stack.Screen
-        name="Onboarding"
-        component={OnboardingScreen}
-        option={{
-          headerTransparent: true
-        }}
-      />
-      <Stack.Screen name="App" component={AppStack} />
-    </Stack.Navigator>
+    <Provider store={store}>
+      <Stack.Navigator mode="card" headerMode="none">
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          option={{
+            headerTransparent: true
+          }}
+        />
+        <Stack.Screen name="App" component={AppStack} />
+        <Stack.Screen name="Admin" component={AdminStack} />
+      </Stack.Navigator>
+    </Provider>
   );
 }
-
-/*
-const ProfileStack = createStackNavigator({
-  Profile: {
-    screen: ProfileScreen,
-    navigationOptions: ({ navigation }) => ({
-      header: <Header white transparent title="Profile" navigation={navigation} />,
-      headerTransparent: true,
-    })
-  },
-}, {
-  cardStyle: { backgroundColor: '#EEEEEE', },
-  transitionConfig,
-});
-
-const SettingsStack = createStackNavigator({
-  Settings: {
-    screen: SettingsScreen,
-    navigationOptions: ({ navigation }) => ({
-      header: <Header title="Settings" navigation={navigation} />,
-    })
-  },
-}, {
-  cardStyle: { backgroundColor: '#EEEEEE', },
-  transitionConfig,
-});
-
-const ComponentsStack = createStackNavigator({
-  Components: {
-    screen: ComponentsScreen,
-    navigationOptions: ({ navigation }) => ({
-      header: <Header title="Components" navigation={navigation} />,
-    })
-  },
-}, {
-  cardStyle: { backgroundColor: '#EEEEEE', },
-  transitionConfig,
-});
-
-
-const HomeStack = createStackNavigator({
-  Home: {
-    screen: HomeScreen,
-    navigationOptions: ({navigation}) => ({
-      header: <Header search tabs title="Home" navigation={navigation} />,
-    })
-  },
-  Pro: {
-    screen: ProScreen,
-    navigationOptions: ({navigation}) => ({
-      header: <Header back white transparent title="" navigation={navigation} />,
-      headerTransparent: true,
-    })
-  },
-},
-{
-  cardStyle: { 
-    backgroundColor: '#EEEEEE', //this is the backgroundColor for the app
-  },
-  transitionConfig,
-});
-
-const AppStack = createDrawerNavigator(
-  {
-    Onboarding: {
-      screen: OnboardingScreen,
-      navigationOptions: {
-        drawerLabel: () => {},
-      },
-    },
-    Home: {
-      screen: HomeStack,
-      navigationOptions: {
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Home" title="Home" />
-        )
-      }
-    },
-    Woman: {
-      screen: ProScreen,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Pro" title="Woman" />
-        ),
-      }),
-    },
-    Man: {
-      screen: ProScreen,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Pro" title="Man" />
-        ),
-      }),
-    },
-    Kids: {
-      screen: ProScreen,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Pro" title="Kids" />
-        ),
-      }),
-    },
-    NewCollection: {
-      screen: ProScreen,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Pro" title="New Collection" />
-        ),
-      }),
-    },
-    Profile: {
-      screen: ProfileStack,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Profile" title="Profile" />
-        ),
-      }),
-    },
-    Settings: {
-      screen: SettingsStack,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Settings" title="Settings" />
-        ),
-      }),
-    },
-    Components: {
-      screen: ComponentsStack,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Components" title="Components" />
-        ),
-      }),
-    },
-    MenuDivider: {
-      screen: HomeStack,
-      navigationOptions: {
-        drawerLabel: () => <Block style={{marginVertical: 8}}><Text>{` `}</Text></Block>,
-      },
-    },
-    SignIn: {
-      screen: ProScreen,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Pro" title="Sign In" />
-        ),
-      }),
-    },
-    SignUp: {
-      screen: ProScreen,
-      navigationOptions: (navOpt) => ({
-        drawerLabel: ({focused}) => (
-          <Drawer focused={focused} screen="Pro" title="Sign Up" />
-        ),
-      }),
-    },
-  },
-  Menu
-);
-
-const AppContainer = createAppContainer(AppStack);
-export default AppContainer;
-
-*/

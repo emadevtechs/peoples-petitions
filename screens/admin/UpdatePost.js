@@ -1,16 +1,17 @@
 import React, {useState,useEffect} from 'react';
-import { StyleSheet, Dimensions, ScrollView, Image, ImageBackground, Platform, View } from 'react-native';
+import { StyleSheet, Dimensions, ScrollView, Image, ImageBackground, Alert,Platform, View,ActivityIndicator } from 'react-native';
 import { Button, Block, Text, theme } from 'galio-framework';
 import { LinearGradient } from 'expo-linear-gradient';
 import { connect } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
-import { actions as useraction } from '../reducer/redux-saga/modules/user';
-import { actions } from '../reducer/redux-saga/modules/post';
-import { Icon } from '../components';
-import { Images, materialTheme } from '../constants';
-import { HeaderHeight } from "../constants/utils";
+import { actions as useraction } from '../../reducer/redux-saga/modules/user';
+import { actions } from '../../reducer/redux-saga/modules/post';
+import { Icon } from '../../components';
+import { Images, materialTheme } from '../../constants';
+import { HeaderHeight } from "../../constants/utils";
+import {Picker} from '@react-native-community/picker';
 
 const { width, height } = Dimensions.get('screen');
 const thumbMeasure = (width - 48 - 32) / 3;
@@ -27,61 +28,68 @@ const getData = async () => {
 const removeData = async () => {
   try {
     await AsyncStorage.removeItem('@user')
-    await AsyncStorage.removeItem('@admin')
   } catch(e) {
     // error reading value
   }
 }
 
-const Profile = (props) => {
+const UpdatePost = (props) => {
 
   const isFocused = useIsFocused();
   const navigation = useNavigation();
-  const[myPosts,setMyPosts] = useState(null);
-  const[userDetails,setUserDetails] = useState(null);
+  const[status,setStatus] = useState(null);
+  const[currentPost,setcurrentPost] = useState(null);
+  const[isLoading,setIsLoading]=useState(false);
 
-  useEffect(() => {
-    if(isFocused){
-      async function getUser(){
-        let data = await getData();
-        if(data && data.id){
-          setUserDetails(data);
-          props.getMyPosts(data.id)
-        }else{
-          navigation.navigate("Sign In")
+//   console.log('updta detail///s', props.route)
+useEffect(() => {
+    if(props && props.updatePostMessage){
+      setIsLoading(false);
+      if(props.updatePostMessage === 'Update Post Successfully'){
+        Alert.alert(
+          "Success",
+          'Post Updated Successfully',
+          [
+            {text: 'Cancel', onPress: () => console.log('Cancel Pressed!')},
+            {text: 'OK', onPress: () =>  navigation.goBack()},
+          ],
+          { cancelable: false }
+        )
+      }else{
+        Alert.alert("Something went wrong")
+      }
+    }
+  },[props && props.updatePostMessage])
+
+    useEffect(() => {
+        if(props && props.currentPost){
+            setcurrentPost(props.currentPost)
+            setStatus(props.currentPost.status)
         }
-      } 
-      getUser();
-    }
-  },[isFocused]);
+    },[props && props.currentPost])
 
-  useEffect(() => {
-    if(props && props.my_posts){
-      setMyPosts(props && props.my_posts);
-    }
-  },[props && props.my_posts]);
-
-  const onSignOutPress = () => {
-    removeData().then(res => {
-      navigation.reset({
-        index: 0,
-        routes: [{name: 'Sign In'}],
-      });
-      navigation.navigate("Sign In")
-    })
+  const onupdatePress = () => {
+    setIsLoading(true)
+        props.updatePost({
+            id: currentPost.id,
+            status: status
+        })
+        // navigation.goBack();
   }
 
     return (
       <Block flex style={styles.profile}>
+           {isLoading ? <ActivityIndicator size="large" color="black" />
+         : <>
         <Block flex>
           <ImageBackground
-            source={{ uri: userDetails && userDetails.profile_url }}
+            source={{ uri: currentPost && currentPost.picture_url }}
             style={styles.profileContainer}
             imageStyle={styles.profileImage}>
             <Block flex style={styles.profileDetails}>
-              <Block style={styles.profileTexts}>
+              {/* <Block style={styles.profileTexts}>
                 <Text color="white" size={28} style={{ paddingBottom: 8 }}>{userDetails && userDetails.name}</Text>
-              </Block>
+              </Block> */}
               <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,1)']} style={styles.gradient} />
             </Block>
           </ImageBackground>
@@ -91,69 +99,51 @@ const Profile = (props) => {
             <Block space="between" style={{ padding: theme.SIZES.BASE, }}>
               <Block row space="between" style={{ padding: theme.SIZES.BASE, }}>
                 <Block row left>
-                  <Text muted size={18}>Email</Text>
+                  <Text muted size={18}>Petition</Text>
                 </Block>
                 <Block row right>
-                  <Text bold size={18}>{userDetails && userDetails.email}</Text>
-                </Block>
-              </Block>
-              <Block row space="between" style={{ padding: theme.SIZES.BASE, }}>
-                <Block row left>
-                  <Text muted size={18}>Phone Number</Text>
-                </Block>
-                <Block row right>
-                  <Text bold size={18}>{userDetails && userDetails.phone_number}</Text>
-                </Block>
-              </Block>
-              <Block row space="between" style={{ padding: theme.SIZES.BASE, }}>
-                <Block row left>
-                  <Text muted size={18}>Address</Text>
-                </Block>
-                <Block row right>
-                  <Text bold size={18}>{userDetails && userDetails.address}</Text>
-                </Block>
-              </Block>
-              <Block row space="between" style={{ padding: theme.SIZES.BASE, }}>
-                <Block row left>
-                  <Text muted size={18}>District</Text>
-                </Block>
-                <Block row right>
-                  <Text bold size={18}>{userDetails && userDetails.district}</Text>
-                </Block>
-              </Block>
-              <Block row space="between" style={{ padding: theme.SIZES.BASE, }}>
-                <Block row left>
-                  <Text muted size={18}>My Posts</Text>
-                </Block>
-                <Block row right>
-                  <Text bold size={18}>{myPosts && myPosts.length}</Text>
+                  <Text bold size={18}>{currentPost && currentPost.text}</Text>
                 </Block>
               </Block>
             </Block>
-            <View style={{alignItems: 'center', justifyContent: 'center', flex: 1}}>
-              <Button round onPress={onSignOutPress} size="small" >LOGOUT</Button>
+            <Text size={16} style={styles.tabTitle}>Update Status</Text>
+            <View style={styles.search}>
+            <Picker
+              selectedValue={status}
+              onValueChange={(itemValue, itemIndex) => setStatus(itemValue)}
+            >
+              <Picker.Item label='Created' value='Created' />
+              <Picker.Item label="Assinged To Department" value="Assinged To Department" />
+              <Picker.Item label="Process going on" value="Process going on" />
+              <Picker.Item label="Completed" value='Completed' />
+            </Picker>
+            </View>
+            <View style={{alignItems: 'center', justifyContent: 'center', flex: 1, marginTop: 30}}>
+              <Button round onPress={onupdatePress} size="small" >UPDATE</Button>
             </View>
           </ScrollView>
         </Block>
+            </>
+}
       </Block>
     );
 }
 
 const mapStateToProps = (state) => {
-  console.log('......',state.post.my_posts)
+  console.log('......',state.post.currentPost)
   return {
-    userRegisterMessage: state.user.userRegisterMessage,
-    my_posts: state.post.my_posts,
+    updatePostMessage: state.post.updatePostMessage,
+    currentPost: state.post.currentPost,
   };
 };
 
 export default connect(
   mapStateToProps,
   {
-    getMyPosts: actions.getMyPosts,
+    updatePost: actions.updatePost,
     clearMessage: actions.clearMessage,
   },
-)(Profile);
+)(UpdatePost);
 
 const styles = StyleSheet.create({
   profile: {
@@ -163,6 +153,15 @@ const styles = StyleSheet.create({
   profileImage: {
     width: width * 1.1,
     height: 'auto',
+  },
+  search: {
+    // height: 48,
+    width: width - 32,
+    // color: 'black',
+    // marginHorizontal: 16,
+    // borderWidth: 1,
+    backgroundColor: 'grey',
+    borderRadius: 3,
   },
   profileContainer: {
     width: width,
@@ -217,5 +216,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: '30%',
     position: 'absolute',
+  },
+  tabTitle: {
+    lineHeight: 29,
+    fontWeight: 'bold',
+    // marginLeft: 20
   },
 });

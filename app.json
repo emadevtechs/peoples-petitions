@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "rn-material-kit-free",
-    "description": "React Native - Material Kit Free",
-    "slug": "rn-material-kit-free",
+    "name": "peoples-petition",
+    "description": "Peoples petition",
+    "slug": "peoples-petition",
     "privacy": "unlisted",
     "platforms": [
       "ios",
@@ -24,6 +24,9 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.thalaema.peoplespetition"
     }
   }
 }
