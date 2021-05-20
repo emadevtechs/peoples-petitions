@@ -1,5 +1,5 @@
 import React,{ useState, useEffect } from 'react';
-import { StyleSheet, Dimensions, ScrollView, View, Alert } from 'react-native';
+import { StyleSheet, Dimensions, ScrollView, View, Alert,ActivityIndicator } from 'react-native';
 import { Button, Block, Text, Input, theme } from 'galio-framework';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { connect } from 'react-redux';
@@ -21,6 +21,7 @@ const storeData = async (value) => {
 const Login = (props) => {
 
   const navigation = useNavigation();
+  const[isLoading,setIsLoading]=useState(false);
 
   const[state,setState] = useState({
     email: null,
@@ -33,6 +34,7 @@ const Login = (props) => {
 
   useEffect(() => {
     if(props && props.loginMessage){
+      setIsLoading(false);
       Alert.alert(
         'Response',
         props.loginMessage,
@@ -63,6 +65,7 @@ const Login = (props) => {
   const onSubmitPress = () => {
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
     if(reg.test(state.email)){
+      setIsLoading(false);
       props.userLogin(state)
     }else{
       Alert.alert("Insert Proper Email")
@@ -74,6 +77,8 @@ const Login = (props) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.products}>
+           {isLoading ? <ActivityIndicator size="large" color="black" />
+         : <>
         <Block flex>
           <Text size={16} style={styles.tabTitle}>Email</Text>
           <Input
@@ -103,6 +108,7 @@ const Login = (props) => {
         </Block>
         <Button round size="small" onPress={onSubmitPress} >LOGIN</Button>
         <Text size={16} onPress={() => navigation.navigate("Sign Up")} style={styles.linkStyle}>New User use this link</Text>
+        </>}
       </ScrollView>
     )
   }
